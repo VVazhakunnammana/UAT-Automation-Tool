@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Excel Upload & Pytest Runner</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Excel Upload & Test Runner</h1>
+            <p>Upload your Excel file and run automated tests</p>
+        </header>
+
+        <main>
+            <div class="upload-section">
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-icon">📁</div>
+                    <h3>Drop your Excel file here or click to browse</h3>
+                    <p>Supported formats: .xlsx, .xls</p>
+                    <input type="file" id="fileInput" accept=".xlsx,.xls" hidden>
+                    <button class="browse-btn" onclick="document.getElementById('fileInput').click()">
+                        Browse Files
+                    </button>
+                </div>
+                
+                <div class="file-info" id="fileInfo" style="display: none;">
+                    <h4>Selected File:</h4>
+                    <p id="fileName"></p>
+                    <p id="fileSize"></p>
+                </div>
+            </div>
+
+            <div class="actions-section">
+                <button class="action-btn upload-btn" id="uploadBtn" disabled>
+                    Upload File
+                </button>
+                <button class="action-btn test-btn" id="runTestBtn" disabled>
+                    Run Tests
+                </button>
+                <button class="action-btn generate-btn" id="generateOutputBtn" disabled>
+                    Generate Sample Output
+                </button>
+            </div>
+
+            <div class="results-section">
+                <div class="status-panel" id="statusPanel">
+                    <h3>Status</h3>
+                    <div class="status-content" id="statusContent">
+                        Ready to upload file...
+                    </div>
+                </div>
+
+                <div class="output-panel" id="outputPanel" style="display: none;">
+                    <h3>Test Results</h3>
+                    <pre class="output-content" id="outputContent"></pre>
+                </div>
+            </div>
+
+            <div class="download-section" id="downloadSection" style="display: none;">
+                <h3>📥 Download Results</h3>
+                <div class="download-controls">
+                    <button class="action-btn refresh-btn" id="refreshFilesBtn">
+                        🔄 Refresh Files
+                    </button>
+                </div>
+                <div class="files-list" id="filesList">
+                    <p class="loading-text">Loading files...</p>
+                </div>
+            </div>
+
+            <div class="progress-bar" id="progressBar" style="display: none;">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+        </main>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
