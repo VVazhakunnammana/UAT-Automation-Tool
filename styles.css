@@ -419,3 +419,76 @@ main {
 .text-icon::before { content: "📄"; }
 .json-icon::before { content: "📝"; }
 .default-icon::before { content: "📁"; }
+
+/* Template Section Styles */
+.template-section {
+    margin-top: 40px;
+    background: #e8f5e8;
+    border-radius: 12px;
+    padding: 25px;
+    border: 1px solid #c3e6c3;
+}
+
+.template-section h3 {
+    color: #2d5a2d;
+    margin-bottom: 15px;
+    font-weight: 600;
+    font-size: 1.3rem;
+}
+
+.template-section p {
+    color: #4a6b4a;
+    margin-bottom: 20px;
+    font-size: 0.95rem;
+}
+
+.template-controls {
+    margin-bottom: 20px;
+    display: flex;
+    gap: 15px;
+    align-items: center;
+}
+
+.templates-list {
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid #b8d4b8;
+    border-radius: 8px;
+    background: white;
+}
+
+.template-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 15px 20px;
+    border-bottom: 1px solid #e8f5e8;
+    transition: background-color 0.2s ease;
+}
+
+.template-item:last-child {
+    border-bottom: none;
+}
+
+.template-item:hover {
+    background-color: #f8fdf8;
+}
+
+.template-download-btn {
+    background: #28a745;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.template-download-btn:hover {
+    background: #218838;
+    transform: translateY(-1px);
+}

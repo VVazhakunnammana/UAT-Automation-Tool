@@ -7,6 +7,8 @@ import time
 from datetime import datetime
 from werkzeug.utils import secure_filename
 import json
+import glob
+import shutil
 
 app = Flask(__name__)
 CORS(app)
@@ -14,16 +16,19 @@ CORS(app)
 # Configuration
 UPLOAD_FOLDER = 'uploads'
 OUTPUT_FOLDER = 'output'
+TEMPLATE_FOLDER = 'template'
 ALLOWED_EXTENSIONS = {'xlsx', 'xls'}
 MAX_FILE_SIZE = 16 * 1024 * 1024  # 16MB
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['OUTPUT_FOLDER'] = OUTPUT_FOLDER
+app.config['TEMPLATE_FOLDER'] = TEMPLATE_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = MAX_FILE_SIZE
 
 # Create upload and output directories if they don't exist
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(OUTPUT_FOLDER, exist_ok=True)
+os.makedirs(TEMPLATE_FOLDER, exist_ok=True)
 os.makedirs('tests', exist_ok=True)
 
 def allowed_file(filename):
@@ -364,6 +369,56 @@ def download_output_file(filename):
     except Exception as e:
         abort(500, description=f"Download failed: {str(e)}")
 
+@app.route('/list-template-files', methods=['GET'])
+def list_template_files():
+    """List all template files available for download"""
+    try:
+        if not os.path.exists(TEMPLATE_FOLDER):
+            return jsonify({'files': []}), 200
+        
+        files = []
+        for filename in os.listdir(TEMPLATE_FOLDER):
+            filepath = os.path.join(TEMPLATE_FOLDER, filename)
+            if os.path.isfile(filepath) and filename.lower().endswith(('.xlsx', '.xls')):
+                file_info = {
+                    'name': filename,
+                    'size': os.path.getsize(filepath),
+                    'modified': datetime.fromtimestamp(os.path.getmtime(filepath)).isoformat(),
+                    'download_url': f'/download-template/{filename}'
+                }
+                files.append(file_info)
+        
+        return jsonify({'files': files}), 200
+    except Exception as e:
+        return jsonify({'error': f'Failed to list template files: {str(e)}'}), 500
+
+@app.route('/download-template/<filename>', methods=['GET'])
+def download_template_file(filename):
+    """Download a template file"""
+    try:
+        # Security check - ensure filename doesn't contain path traversal
+        if '..' in filename or '/' in filename or '\\' in filename:
+            abort(400, description="Invalid filename")
+        
+        filepath = os.path.join(TEMPLATE_FOLDER, filename)
+        
+        # Check if file exists
+        if not os.path.isfile(filepath):
+            abort(404, description="Template file not found")
+        
+        # Verify it's an Excel file
+        if not filename.lower().endswith(('.xlsx', '.xls')):
+            abort(400, description="Only Excel files can be downloaded")
+        
+        return send_file(
+            filepath,
+            as_attachment=True,
+            download_name=filename,
+            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+    except Exception as e:
+        abort(500, description=f"Template download failed: {str(e)}")
+
 # @app.route('/create-sample-output', methods=['POST'])
 # def create_sample_output():
 #     """Create a sample output file for demonstration"""
@@ -439,6 +494,37 @@ def download_output_file(filename):
         
 #     except Exception as e:
 #         return jsonify({'error': f'Failed to create sample output: {str(e)}'}), 500
+
+@app.route('/clear-uploads', methods=['POST'])
+def clear_uploads():
+    """Clear all files from the uploads folder"""
+    try:
+        # Get all files in the uploads folder
+        upload_files = glob.glob(os.path.join(UPLOAD_FOLDER, '*'))
+        cleared_count = 0
+        
+        for file_path in upload_files:
+            try:
+                if os.path.isfile(file_path):
+                    os.remove(file_path)
+                    cleared_count += 1
+                elif os.path.isdir(file_path):
+                    shutil.rmtree(file_path)
+                    cleared_count += 1
+            except Exception as e:
+                print(f"Warning: Could not remove {file_path}: {str(e)}")
+        
+        return jsonify({
+            'success': True,
+            'message': f'Cleared {cleared_count} items from uploads folder',
+            'cleared_count': cleared_count
+        }), 200
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': f'Failed to clear uploads folder: {str(e)}'
+        }), 500
 
 if __name__ == '__main__':
     print("Starting Excel Upload & Test Runner Server...")

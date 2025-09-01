@@ -7,6 +7,9 @@ class ExcelUploadApp {
 
     init() {
         this.setupEventListeners();
+        this.clearUploads(); // Clear uploads folder on page load/refresh
+        this.loadTemplateFiles(); // Load available template files
+        this.loadOutputFiles(); // Load available output files
         this.updateStatus('Ready to upload file...');
     }
 
@@ -56,15 +59,20 @@ class ExcelUploadApp {
         });
 
         // Download functionality event listeners
-        const generateOutputBtn = document.getElementById('generateOutputBtn');
+        // const generateOutputBtn = document.getElementById('generateOutputBtn');
         const refreshFilesBtn = document.getElementById('refreshFilesBtn');
+        const refreshTemplatesBtn = document.getElementById('refreshTemplatesBtn');
 
-        generateOutputBtn.addEventListener('click', () => {
-            this.generateSampleOutput();
-        });
+        // generateOutputBtn.addEventListener('click', () => {
+        //     this.generateSampleOutput();
+        // });
 
         refreshFilesBtn.addEventListener('click', () => {
             this.loadOutputFiles();
+        });
+
+        refreshTemplatesBtn.addEventListener('click', () => {
+            this.loadTemplateFiles();
         });
     }
 
@@ -153,7 +161,7 @@ class ExcelUploadApp {
 
     enableTestButton() {
         document.getElementById('runTestBtn').disabled = false;
-        document.getElementById('generateOutputBtn').disabled = false;
+        //document.getElementById('generateOutputBtn').disabled = false;
         this.showDownloadSection();
         this.loadOutputFiles();
     }
@@ -340,16 +348,9 @@ class ExcelUploadApp {
         }
     }
 
-    async generateSampleOutput() {
-        if (!this.fileUploaded) {
-            this.showError('Please upload a file first');
-            return;
-        }
-
-        this.updateStatus('Generating sample output...', 'processing');
-        
+    async clearUploads() {
         try {
-            const response = await fetch('/create-sample-output', {
+            const response = await fetch('/clear-uploads', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -358,16 +359,125 @@ class ExcelUploadApp {
 
             if (response.ok) {
                 const result = await response.json();
-                this.updateStatus('Sample output generated successfully!', 'success');
-                this.loadOutputFiles(); // Refresh the files list
+                console.log(`Cleared uploads: ${result.message}`);
+                // Reset file state
+                this.selectedFile = null;
+                this.fileUploaded = false;
+                
+                // Hide file info and reset UI
+                const fileInfo = document.getElementById('fileInfo');
+                if (fileInfo) fileInfo.style.display = 'none';
+                
+                // Reset buttons
+                const uploadBtn = document.getElementById('uploadBtn');
+                const runTestBtn = document.getElementById('runTestBtn');
+                if (uploadBtn) uploadBtn.disabled = true;
+                if (runTestBtn) runTestBtn.disabled = true;
+                
+                // Reset file input
+                const fileInput = document.getElementById('fileInput');
+                if (fileInput) fileInput.value = '';
+                
             } else {
-                const error = await response.json();
-                this.showError(`Failed to generate output: ${error.error || 'Unknown error'}`);
+                console.error('Failed to clear uploads folder');
             }
         } catch (error) {
-            this.showError(`Output generation failed: ${error.message}`);
+            console.error(`Error clearing uploads: ${error.message}`);
         }
     }
+
+    async loadTemplateFiles() {
+        try {
+            const response = await fetch('/list-template-files');
+            if (response.ok) {
+                const result = await response.json();
+                this.displayTemplateFiles(result.files);
+            } else {
+                document.getElementById('templatesList').innerHTML = 
+                    '<p class="no-files-text">Failed to load template files</p>';
+            }
+        } catch (error) {
+            document.getElementById('templatesList').innerHTML = 
+                '<p class="no-files-text">Error loading template files</p>';
+        }
+    }
+
+    displayTemplateFiles(files) {
+        const templatesList = document.getElementById('templatesList');
+        
+        if (!files || files.length === 0) {
+            templatesList.innerHTML = '<p class="no-files-text">No template files available</p>';
+            return;
+        }
+
+        const filesHtml = files.map(file => `
+            <div class="template-item">
+                <div class="template-info">
+                    <div class="template-name">
+                        <span class="file-icon excel-icon"></span>
+                        ${file.name}
+                    </div>
+                </div>
+                <button class="template-download-btn" onclick="app.downloadTemplate('${file.name}')">
+                    ⬇️ Download
+                </button>
+            </div>
+        `).join('');
+
+        templatesList.innerHTML = filesHtml;
+    }
+
+    async downloadTemplate(filename) {
+        try {
+            const response = await fetch(`/download-template/${encodeURIComponent(filename)}`);
+            if (response.ok) {
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+                
+                this.updateStatus(`Downloaded template: ${filename}`, 'success');
+            } else {
+                this.showError(`Failed to download template ${filename}`);
+            }
+        } catch (error) {
+            this.showError(`Template download error: ${error.message}`);
+        }
+    }
+
+    // async generateSampleOutput() {
+    //     if (!this.fileUploaded) {
+    //         this.showError('Please upload a file first');
+    //         return;
+    //     }
+
+    //     this.updateStatus('Generating sample output...', 'processing');
+        
+    //     try {
+    //         const response = await fetch('/create-sample-output', {
+    //             method: 'POST',
+    //             headers: {
+    //                 'Content-Type': 'application/json'
+    //             }
+    //         });
+
+    //         if (response.ok) {
+    //             const result = await response.json();
+    //             this.updateStatus('Sample output generated successfully!', 'success');
+    //             this.loadOutputFiles(); // Refresh the files list
+    //         } else {
+    //             const error = await response.json();
+    //             this.showError(`Failed to generate output: ${error.error || 'Unknown error'}`);
+    //         }
+    //     } catch (error) {
+    //         this.showError(`Output generation failed: ${error.message}`);
+    //     }
+    // }
 }
 
 // Initialize the app when the DOM is loaded

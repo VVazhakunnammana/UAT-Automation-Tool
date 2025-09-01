@@ -9,11 +9,24 @@
 <body>
     <div class="container">
         <header>
-            <h1>Excel Upload & Test Runner</h1>
+            <h1>UAT Automation Tool</h1>
             <p>Upload your Excel file and run automated tests</p>
         </header>
 
         <main>
+            <div class="template-section">
+                <h3>📋 Download Template</h3>
+                <p>Get How To and Sample Test Data Template to start using the tool</p>
+                <div class="template-controls">
+                    <button class="action-btn refresh-btn" id="refreshTemplatesBtn">
+                        🔄 Refresh Templates
+                    </button>
+                </div>
+                <div class="templates-list" id="templatesList">
+                    <p class="loading-text">Loading templates...</p>
+                </div>
+            </div>
+
             <div class="upload-section">
                 <div class="upload-area" id="uploadArea">
                     <div class="upload-icon">📁</div>
@@ -38,9 +51,6 @@
                 </button>
                 <button class="action-btn test-btn" id="runTestBtn" disabled>
                     Run Tests
-                </button>
-                <button class="action-btn generate-btn" id="generateOutputBtn" disabled>
-                    Generate Sample Output
                 </button>
             </div>
 
